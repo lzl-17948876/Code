@@ -34,7 +34,8 @@ requires
   designide,
   vclactnband,
   vclx,
-  vclimg;
+  vclimg,
+  fmx;
 
 contains
   HSControlReg in 'HSControlReg.pas',

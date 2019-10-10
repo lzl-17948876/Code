@@ -102,7 +102,6 @@ type
     FOnBeforePopup: TNotifyEvent;
     FMeasureMenuItem: Boolean;
     FCharHalfHeight: Integer; { 字符半高 }
-    FCompactMode: Boolean;
     FPopupAnchor: TPopupAnchor;
     FTrackButton: TTrackButton;
     FShowCaption: Boolean;
@@ -199,10 +198,6 @@ type
     /// 是否限制菜单宽度和按钮保持一直
     /// </summary>
     property MeasureMenuItem: Boolean read FMeasureMenuItem write FMeasureMenuItem default True;
-    /// <summary>
-    /// 紧凑模式
-    /// </summary>
-    property CompactMode: Boolean read FCompactMode write FCompactMode default False;
     /// <summary>
     /// 菜单弹出方向
     /// </summary>
@@ -798,79 +793,74 @@ end;
 
 procedure THSImageButton.miDrawItem(Sender: TObject; ACanvas: TCanvas; ARect: TRect; Selected: Boolean);
 var
-  nCY: Integer;
-  nChecked: Boolean;
-  nText: string;
-  nOldBS: TBrushStyle;
-  nOldBSCL: TColor;
-  nDTL, nDTL_CK, nDTL_CKBG: TThemedElementDetails;
-  nRC, nRC_CK: TRect;
-  nSize: TSize;
-  nStyle: TCustomStyleServices;
+  lCY, lImageIndex: Integer;
+  lChecked, lImageExists: Boolean;
+  lText: string;
+  lOldBS: TBrushStyle;
+  lOldBSCL: TColor;
+  lDTL, lDTL_CK: TThemedElementDetails;
+  lRC, lRC_CK: TRect;
+  lSize: TSize;
+  lStyle: TCustomStyleServices;
+  lImages: TCustomImageList;
+  lPT: TPoint;
 begin
-  nCY := ARect.CenterPoint.Y;
+  lCY := ARect.CenterPoint.Y;
   with TMenuItem(Sender) do
   begin
-    nChecked := Checked;
-    nText := Caption;
+    lChecked := Checked;
+    lText := Caption;
+    lImageIndex := ImageIndex;
   end;
 
-  if CheckWin32Version(6, 0) and ThemeControl(Self) then
+  lImages := Self.PopupMenu.Images;
+
+  lImageExists := (lImageIndex > -1) and (lImages <> nil) and (lImages.Count > lImageIndex);
+
+  if (Win32MajorVersion >= 6) and ThemeControl(Self) then
   begin
-    nStyle := StyleServices;
+    lStyle := StyleServices;
 
     ACanvas.Brush.Color := clMenu;
     ACanvas.FillRect(ARect);
-    nRC := ARect;
+    lRC := ARect;
 
-    nDTL_CK := nStyle.GetElementDetails(TThemedMenu.tmPopupCheckNormal);
-    nStyle.GetElementSize(ACanvas.Handle, nDTL_CK, esActual, nSize);
-    nRC_CK := nRC;
-    nRC_CK.Right := nRC.Left + nSize.cx + 6;
+    lDTL_CK := lStyle.GetElementDetails(TThemedMenu.tmPopupCheckNormal);
+    lStyle.GetElementSize(ACanvas.Handle, lDTL_CK, esActual, lSize);
+    lRC_CK := lRC;
+    lRC_CK.Right := lRC.Left + lSize.cx + 6;
 
-    if FCompactMode then
-    begin
-      nRC.Left := nRC_CK.Right;
-    end
-    else
-    begin
-      nRC.Left := nRC_CK.Right + 4;
-      ACanvas.Pen.Color := nStyle.GetSystemColor(clBtnShadow);
-      ACanvas.MoveTo(nRC.Left, nRC.Top);
-      ACanvas.LineTo(nRC.Left, nRC.Bottom);
-      Inc(nRC.Left);
-      ACanvas.Pen.Color := nStyle.GetSystemColor(clBtnHighlight);
-      ACanvas.MoveTo(nRC.Left, nRC.Top);
-      ACanvas.LineTo(nRC.Left, nRC.Bottom);
-      Inc(nRC.Left, 4);
-    end;
+    lRC.Left := lRC_CK.Right + 2;
 
     if Selected then
-      nDTL := nStyle.GetElementDetails(TThemedMenu.tmPopupItemHot)
+      lDTL := lStyle.GetElementDetails(TThemedMenu.tmPopupItemHot)
     else
-      nDTL := nStyle.GetElementDetails(TThemedMenu.tmPopupItemNormal);
-    nStyle.DrawElement(ACanvas.Handle, nDTL, ARect);
+      lDTL := lStyle.GetElementDetails(TThemedMenu.tmPopupItemNormal);
+    lStyle.DrawElement(ACanvas.Handle, lDTL, ARect);
 
-    if nChecked then
+    if lImageExists then
     begin
-      if not FCompactMode then
-      begin
-        nDTL_CKBG := nStyle.GetElementDetails(TThemedMenu.tmPopupCheckBackgroundNormal);
-        nStyle.DrawElement(ACanvas.Handle, nDTL_CKBG, nRC_CK);
-      end;
-      nStyle.DrawElement(ACanvas.Handle, nDTL_CK, nRC_CK);
+      lPT := lRC_CK.CenterPoint;
+      if lChecked then
+        LStyle.DrawElement(ACanvas.Handle, lStyle.GetElementDetails(tmPopupCheckBackgroundNormal), lRC_CK);
+      lImages.Draw(ACanvas, lPT.X - lImages.Width div 2, lPT.Y - lImages.Height div 2, lImageIndex, dsNormal, itImage);
+    end
+    else if lChecked then
+    begin
+      lStyle.DrawElement(ACanvas.Handle, lStyle.GetElementDetails(TThemedMenu.tmPopupCheckBackgroundNormal), lRC_CK);
+      lStyle.DrawElement(ACanvas.Handle, lDTL_CK, lRC_CK);
     end;
 
-    if nText = cLineCaption then
+    if lText = cLineCaption then
     begin
       Inc(ARect.Top, 4);
-      nDTL := nStyle.GetElementDetails(TThemedMenu.tmSeparator);
-      nStyle.DrawEdge(ACanvas.Handle, nDTL, ARect, EDGE_ETCHED, BF_TOP);
+      lDTL := lStyle.GetElementDetails(TThemedMenu.tmSeparator);
+      lStyle.DrawEdge(ACanvas.Handle, lDTL, ARect, EDGE_ETCHED, BF_TOP);
     end
     else
     begin
-      nDTL := nStyle.GetElementDetails(TThemedMenu.tmMenuBarItemNormal);
-      nStyle.DrawText(ACanvas.Handle, nDTL, nText, nRC, [tfNoClip, tfVerticalCenter, tfSingleLine]);
+      lDTL := lStyle.GetElementDetails(TThemedMenu.tmMenuBarItemNormal);
+      lStyle.DrawText(ACanvas.Handle, lDTL, lText, lRC, [tfNoClip, tfVerticalCenter, tfSingleLine]);
     end;
   end
   else
@@ -880,22 +870,22 @@ begin
     else
       ACanvas.Brush.Color := clMenu;
     ACanvas.FillRect(ARect);
-    if nChecked then
+    if lChecked then
     begin
-      nOldBS := ACanvas.Brush.Style;
-      nOldBSCL := ACanvas.Brush.Color;
-      ACanvas.Draw(ARect.Left + 3, nCY - FBOCHalfHeight - 1, FBMP_OBM_CHECK);
-      ACanvas.Brush.Style := nOldBS;
-      ACanvas.Brush.Color := nOldBSCL;
+      lOldBS := ACanvas.Brush.Style;
+      lOldBSCL := ACanvas.Brush.Color;
+      ACanvas.Draw(ARect.Left + 3, lCY - FBOCHalfHeight - 1, FBMP_OBM_CHECK);
+      ACanvas.Brush.Style := lOldBS;
+      ACanvas.Brush.Color := lOldBSCL;
     end;
 
-    if nText = cLineCaption then
+    if lText = cLineCaption then
     begin
       Inc(ARect.Top, 4);
       DrawEdge(ACanvas.Handle, ARect, EDGE_ETCHED, BF_TOP);
     end
     else
-      ACanvas.TextOut(ARect.Left + FBMP_OBM_CHECK.Width + 6, nCY - FCharHalfHeight, nText);
+      ACanvas.TextOut(ARect.Left + FBMP_OBM_CHECK.Width + 6, lCY - FCharHalfHeight, lText);
   end;
 end;
 

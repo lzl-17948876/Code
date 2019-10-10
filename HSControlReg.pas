@@ -6,8 +6,7 @@ uses
   Classes,
   Vcl.ImgList, DesignIntf, VCLEditors,
   HSMovePanel, HSShadowControls, HSIPEdit, HSImageButton, HSCheckCombobox,
-  HSPropertyEditor,
-  HS.FMX.Objects;
+  HSPropertyEditor, HS.FMX.Objects;
 
 procedure Register;
 
