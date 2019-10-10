@@ -286,7 +286,7 @@ var
   nDefParam: _TDefPPMParam;
   nPopFlg: DWORD;
   nMI: TMenuItem;
-  nPopuped: Boolean;
+  nPopuped, lIsFlat: Boolean;
   nAT: TThread;
   nBR: TRect;
 begin
@@ -320,7 +320,11 @@ begin
     end;
   end;
 
+  lIsFlat := Self.Flat;
   try
+    if lIsFlat then
+      Flat := False;
+
     case FPopupAnchor of
       paTopLeft:
         begin
@@ -443,7 +447,11 @@ begin
       nAT.Start;
     end;
     TrackPopupMenu(PopupMenu.Items.Handle, nPopFlg, nPT.X, nPT.Y, 0, PopupList.Window, nil);
+    FMouseInControl := False;
   finally
+    if lIsFlat then
+      Flat := True;
+
     if nAT <> nil then
     begin
       nAT.FreeOnTerminate := False;
@@ -1251,7 +1259,6 @@ procedure THSImageButton.CMMouseEnter(var Message: TMessage);
 var
   NeedRepaint: Boolean;
 begin
-  inherited;
   { Don't draw a border if DragMode <> dmAutomatic since this button is meant to
     be used as a dock client. }
   NeedRepaint := FFlat and not FMouseInControl and Enabled and (DragMode <> dmAutomatic) and (GetCapture = 0);
@@ -1263,6 +1270,7 @@ begin
     if Enabled then
       Repaint;
   end;
+  inherited;
 end;
 
 procedure THSImageButton.CMMouseLeave(var Message: TMessage);
