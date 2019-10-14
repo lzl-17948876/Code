@@ -54,11 +54,12 @@ type
     procedure WMKeyDown(var Message: TWMKey); message WM_KEYDOWN;
     procedure CreateParams(var Params: TCreateParams); override;
     procedure KeyPress(var Key: Char); override;
+    procedure WMPASTE(var Message: TMessage); message WM_PASTE;
   protected
     { Protected declarations }
     procedure Change; override;
 
-    procedure SetValueStr(AValue: string);
+    procedure SetValueStr(AValue: string; AFailToEmpty: Boolean = False);
     procedure ActiveField(ANext, ASel: Boolean);
 
     constructor Create(AOwner: TComponent); override;
@@ -107,6 +108,7 @@ type
     procedure CMColorChanged(var Message: TMessage); message CM_COLORCHANGED;
     procedure CMFontChanged(var Message: TMessage); message CM_FONTCHANGED;
     procedure WMIPFIELDACTIVE(var Message: TMessage); message WM_IPFIELD_ACTIVE;
+    procedure WMPASTE(var Message: TWMPaste); message WM_PASTE;
     procedure DoChange(Sender: TObject);
   protected
     procedure ArrangeFields;
@@ -161,10 +163,13 @@ type
 
 implementation
 
+uses
+  Vcl.Clipbrd;
+
 const
   _DefWidthIPV4 = 161;
   _DefWidthIPV6 = 361;
-  
+
 {  TIPFieldEdit }
 
 procedure THSIPField.SetMin(AValue: Word);
@@ -176,7 +181,7 @@ begin
     FMax := FMin;
 end;
 
-procedure THSIPField.SetValueStr(AValue: string);
+procedure THSIPField.SetValueStr(AValue: string; AFailToEmpty: Boolean = False);
 var
   nValue, nCode: Integer;
 begin
@@ -192,18 +197,35 @@ begin
     else
     begin
       if (nValue < FMin) then
-        nValue := FMin
+      begin
+        if AFailToEmpty then
+          nValue := -1
+        else
+          nValue := FMin;
+      end
       else if (nValue > FMax) then
-        nValue := FMax;
+      begin
+        if AFailToEmpty then
+          nValue := -1
+        else
+          nValue := FMax;
+      end;
 
-      if FIPV6 then
-        AValue := IntToHex(nValue, 2)
+      if nValue = -1 then
+        AValue := ''
       else
-        AValue := IntToStr(nValue);
+      begin
+        if FIPV6 then
+          AValue := IntToHex(nValue, 2)
+        else
+          AValue := IntToStr(nValue);
+      end;
     end;
+
     if AValue <> Text then
       Text := AValue;
 
+    {如果输入到足够长度, 切换到下一个输入框}
     if (Length(Text) = MaxLength) and (CurrentPosition = MaxLength) then
       ActiveField(True, True);
   finally
@@ -230,7 +252,9 @@ end;
 
 procedure THSIPField.KeyPress(var Key: Char);
 begin
-  if FIPV6 and (Key in ['0'..'9', 'A'..'F']) then
+  if GetKeyState(VK_CONTROL) < 0 then
+    inherited
+  else if FIPV6 and (Key in ['0'..'9', 'A'..'F']) then
   begin
     inherited;
   end
@@ -352,6 +376,27 @@ begin
     SetValueStr(nV);
   end;
   Visible := False;//FIPV6 or (FIndex > 3);
+end;
+
+procedure THSIPField.WMPASTE(var Message: TMessage);
+var
+  lText: string;
+  lI: Int32;
+begin
+  if ClipBoard.HasFormat(CF_TEXT) then
+  begin
+    if FIPV6 then
+      lText := '$' + Clipboard.AsText
+    else
+      lText := Clipboard.AsText;
+
+    if TryStrToInt(lText, lI) then
+      inherited
+    else
+      PostMessage(Parent.Handle, WM_PASTE, Message.WParam, Message.LParam);
+  end
+  else
+    inherited;
 end;
 
 procedure THSIPField.WMKeyDown(var Message: TWMKey);
@@ -600,30 +645,24 @@ end;
 procedure THSIPEdit.SetIPString(Value: string);
 var
   i, nF: integer;
+  lA: TArray<string>;
 begin
   if FIPV6 then
     nF := 0
   else
     nF := 4;
 
-  with TStringList.Create do
-  try
-    if FIPV6 then
-      Delimiter := ':'
-    else
-      Delimiter := '.';
+  {暂不支持IPV6缩写模式 如: 0::FF:0}
+  if FIPV6 then
+    lA := Value.Split([':'])
+  else
+    lA := Value.Split(['.']);
 
-    DelimitedText := Value;
-    {暂不支持IPV6缩写模式 如: 0::FF:0}
-    if Count <> (8 - nF) then
-      for i := nF to 7 do
-        FFields[i].SetValueStr('')
-    else
-      for i := nF to 7 do
-        FFields[i].SetValueStr(Strings[i - nF]);
-  finally
-    Free;
-  end;
+  if Length(lA) <> (8 - nF) then
+    Exit;
+
+  for i := nF to 7 do
+    FFields[i].SetValueStr(lA[i - nF], True);
 end;
 
 procedure THSIPEdit.SetIPV6(const Value: Boolean);
@@ -740,6 +779,18 @@ begin
   if not FUpdatting then
     ArrangeFields;
   Invalidate;
+end;
+
+procedure THSIPEdit.WMPASTE(var Message: TWMPaste);
+var
+  lText: string;
+begin
+  if ClipBoard.HasFormat(CF_TEXT) then
+  begin
+    SetIPString(Clipboard.AsText);
+  end
+  else
+    inherited;
 end;
 
 procedure THSIPEdit.WMIPFIELDACTIVE(var Message: TMessage);
