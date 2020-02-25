@@ -12,17 +12,20 @@ type
     Prompt: string;
     Value: string;
     MultiLine: Boolean;
+    MaxLength: Integer;
     PasswordChar: Char;
     CharCase: TEditCharCase;
   end;
   TInputBoxItemHelper = record helper for TInputBoxItem
-    class function Create: TInputBoxItem; static;
+    procedure Init(AID, APrompt, AValue: string);
   end;
   TInputCloseQueryFunc = reference to function (const ID, Value: string): Boolean;
 
 function InputBox(const ACaption: string; AItems: TArray<TInputBoxItem>;
   ACloseQueryFunc: TInputCloseQueryFunc): Boolean; overload;
 function InputBox(const ACaption: string; var AItem: TInputBoxItem): Boolean; overload;
+
+function SelectBox(const ACaption: string; const AItems: TArray<string>): Integer;
 
 implementation
 
@@ -31,7 +34,7 @@ uses
   Vcl.Forms, Vcl.Controls;
 
 var
-  FLastRect: TRect;
+  FLastPoint: TPoint;
 
 type
   PInputBoxItem = ^TInputBoxItem;
@@ -66,40 +69,39 @@ function InputBox(const ACaption: string; AItems: TArray<TInputBoxItem>;
 const
   C_B = 8;
 var
-  nItemIndex, J: Integer;
-  nForm: TInputQueryForm;
+  lItemIndex: Integer;
+  lForm: TInputQueryForm;
   lCE: TCustomEdit;
-  nLabel: TLabel;
-  nItemCount: Integer;
-  nTop, nButtonTop, nButtonWidth, nButtonHeight: Integer;
-  nEIDic: TDictionary<string, TCustomEdit>;
-  nPI: PInputBoxItem;
+  lItemCount: Integer;
+  lTop, lButtonTop, lButtonWidth, lButtonHeight: Integer;
+  lEDTList: TArray<TCustomEdit>;
+  lPI: PInputBoxItem;
   lBTNOK, lBTNCancel: TButton;
 begin
-  nItemCount := Length(AItems);
-  if nItemCount < 1 then
+  lItemCount := Length(AItems);
+  if lItemCount < 1 then
     raise Exception.Create('元素为空');
   Result := False;
-  nForm := TInputQueryForm.CreateNew(Application);
-  nEIDic := TDictionary<string, TCustomEdit>.Create;
+  lForm := TInputQueryForm.CreateNew(Application);
   try
-    with nForm do
+    SetLength(lEDTList, lItemCount);
+    with lForm do
     begin
       FCloseQueryFunc :=
         function: Boolean
         var
-          nItemIndex: Integer;
+          lItemIndex: Integer;
           nCE: TCustomEdit;
-          nPI: PInputBoxItem;
+          lPI: PInputBoxItem;
         begin
           Result := True;
           if not Assigned(ACloseQueryFunc) then
             Exit;
-          for nItemIndex := Low(AItems) to High(AItems) do
+          for lItemIndex := Low(AItems) to High(AItems) do
           begin
-            nPI := @AItems[nItemIndex];
-            nCE := nEIDic.Items[nPI^.ID];
-            Result := ACloseQueryFunc(nPI^.ID, nCE.Text);
+            lPI := @AItems[lItemIndex];
+            nCE := lEDTList[lItemIndex];
+            Result := ACloseQueryFunc(lPI^.ID, nCE.Text);
             if not Result then
               Exit;
           end;
@@ -109,101 +111,205 @@ begin
       Caption := ACaption;
       ClientWidth := 256;
       PopupMode := pmAuto;
-      nTop := C_B;
-      for nItemIndex := 0 to nItemCount - 1 do
+      lTop := C_B;
+      for lItemIndex := 0 to lItemCount - 1 do
       begin
-        nPI := @AItems[nItemIndex];
+        lPI := @AItems[lItemIndex];
 
-        if nPI^.MultiLine then
+        if lPI^.MultiLine then
         begin
-          lCE := TMemo.Create(nForm);
+          lCE := TMemo.Create(lForm);
           with TMemo(lCE) do
           begin
-            CharCase := nPI^.CharCase;
+            MaxLength := lPI^.MaxLength;
+            CharCase := lPI^.CharCase;
             ScrollBars := ssVertical;
           end;
         end
         else
         begin
-          lCE := TEdit.Create(nForm);
+          lCE := TEdit.Create(lForm);
           with TEdit(lCE) do
           begin
-            MaxLength := 255;
-            PasswordChar := nPI.PasswordChar;
+            MaxLength := lPI^.MaxLength;
+            PasswordChar := lPI.PasswordChar;
           end;
         end;
 
         with lCE do
         begin
-          Parent := nForm;
+          Parent := lForm;
           Left := C_B;
-          Top := nTop;
-          Width := nForm.ClientWidth - C_B * 2;
-          TextHint := nPI^.Prompt;
-          Text := nPI^.Value;
+          Top := lTop;
+          Width := lForm.ClientWidth - C_B * 2;
+          TextHint := lPI^.Prompt;
+          Text := lPI^.Value;
         end;
-        Inc(nTop, lCE.Height + C_B);
-        nEIDic.Add(nPI^.ID, lCE);
+        Inc(lTop, lCE.Height + C_B);
+        lEDTList[lItemIndex] := lCE;
 
-        if nItemIndex = 0 then
+        if lItemIndex = 0 then
           lCE.SelectAll;
       end;
 
-      nButtonTop := nTop + C_B;
-      nButtonWidth := 50;
-      nButtonHeight := 25;
-      lBTNOK := TButton.Create(nForm);
+      lButtonTop := lTop + C_B;
+      lButtonWidth := 50;
+      lButtonHeight := 25;
+      lBTNOK := TButton.Create(lForm);
       with lBTNOK do
       begin
-        Parent := nForm;
+        Parent := lForm;
         Caption := '确定';
         ModalResult := mrOk;
         Default := True;
-        SetBounds(nForm.ClientWidth - (nButtonWidth + C_B) * 2, nButtonTop, nButtonWidth, nButtonHeight);
+        SetBounds(lForm.ClientWidth - (lButtonWidth + C_B) * 2, lButtonTop, lButtonWidth, lButtonHeight);
       end;
-      lBTNCancel := TButton.Create(nForm);
+      lBTNCancel := TButton.Create(lForm);
       with lBTNCancel do
       begin
-        Parent := nForm;
+        Parent := lForm;
         Caption := '取消';
         ModalResult := mrCancel;
         Cancel := True;
-        SetBounds(nForm.ClientWidth - (nButtonWidth + C_B), nButtonTop, nButtonWidth, nButtonHeight);
+        SetBounds(lForm.ClientWidth - (lButtonWidth + C_B), lButtonTop, lButtonWidth, lButtonHeight);
       end;
 
-      nForm.ClientHeight := nButtonTop + nButtonHeight + 13;
-      if nPI^.MultiLine then
-        lCE.Anchors := [akLeft, akRight, akTop, akBottom]
-      else
-        lCE.Anchors := [akLeft, akRight, akTop];
+      lForm.ClientHeight := lButtonTop + lButtonHeight + 13;
+      for lItemIndex := 0 to lItemCount - 1 do
+      begin
+        lPI := @AItems[lItemIndex];
+        if lPI^.MultiLine then
+          lEDTList[lItemIndex].Anchors := [akLeft, akRight, akTop, akBottom]
+        else
+          lEDTList[lItemIndex].Anchors := [akLeft, akRight, akTop];
+      end;
       lBTNOK.Anchors := [akRight, akBottom];
       lBTNCancel.Anchors := [akRight, akBottom];
 
-      if FLastRect.IsEmpty then
+      if FLastPoint.IsZero then
       begin
         Position := poScreenCenter;
       end
       else
       begin
         Position := poDesigned;
-        BoundsRect := FLastRect;
+        SetBounds(FLastPoint.X, FLastPoint.Y, Width, Height);
       end;
 
       if ShowModal = mrOk then
       begin
-        for nItemIndex := 0 to nItemCount - 1 do
+        for lItemIndex := 0 to lItemCount - 1 do
         begin
-          nPI := @AItems[nItemIndex];
-          nPI^.Value := nEIDic.Items[nPI^.ID].Text;
+          lPI := @AItems[lItemIndex];
+          lPI^.Value := lEDTList[lItemIndex].Text;
         end;
         Result := True;
       end;
 
-      FLastRect := BoundsRect;
+      FLastPoint := Point(Left, Top);
     end;
   finally
-    nEIDic.Free;
-    nForm.Free;
+    lForm.Free;
+  end;
+end;
+
+function SelectBox(const ACaption: string; const AItems: TArray<string>): Integer;
+const
+  C_B = 8;
+var
+  lItemIndex: Integer;
+  lForm: TForm;
+  lRBList: TArray<TRadioButton>;
+  lItemCount: Integer;
+  lTop, lButtonTop, lButtonWidth, lButtonHeight: Integer;
+  lBTNOK, lBTNCancel: TButton;
+begin
+  Result := -1;
+  lItemCount := Length(AItems);
+  if lItemCount < 1 then
+    Exit;
+  if lItemCount = 1 then
+    Exit(0);
+
+  lForm := TForm.CreateNew(Application);
+  try
+    with lForm do
+    begin
+      Canvas.Font := Font;
+      BorderStyle := bsSizeToolWin;
+      Caption := ACaption;
+      ClientWidth := 128;
+      PopupMode := pmAuto;
+
+      lTop := C_B;
+      SetLength(lRBList, Length(AItems));
+      for lItemIndex := 0 to lItemCount - 1 do
+      begin
+        lRBList[lItemIndex] := TRadioButton.Create(lForm);
+        with lRBList[lItemIndex] do
+        begin
+          Caption := AItems[lItemIndex];
+          Tag := lItemIndex;
+          Parent := lForm;
+          Left := C_B;
+          Top := lTop;
+          Width := lForm.ClientWidth - C_B * 2;
+          Inc(lTop, Height + C_B);
+        end;
+      end;
+
+      lRBList[0].Checked := True;
+      lButtonTop := lTop + C_B;
+      lButtonWidth := 50;
+      lButtonHeight := 25;
+      lBTNOK := TButton.Create(lForm);
+      with lBTNOK do
+      begin
+        Parent := lForm;
+        Caption := '确定';
+        ModalResult := mrOk;
+        Default := True;
+        SetBounds(lForm.ClientWidth - (lButtonWidth + C_B) * 2, lButtonTop, lButtonWidth, lButtonHeight);
+      end;
+      lBTNCancel := TButton.Create(lForm);
+      with lBTNCancel do
+      begin
+        Parent := lForm;
+        Caption := '取消';
+        ModalResult := mrCancel;
+        Cancel := True;
+        SetBounds(lForm.ClientWidth - (lButtonWidth + C_B), lButtonTop, lButtonWidth, lButtonHeight);
+      end;
+
+      lForm.ClientHeight := lButtonTop + lButtonHeight + 13;
+      lBTNOK.Anchors := [akRight, akBottom];
+      lBTNCancel.Anchors := [akRight, akBottom];
+
+      if FLastPoint.IsZero then
+      begin
+        Position := poScreenCenter;
+      end
+      else
+      begin
+        Position := poDesigned;
+        SetBounds(FLastPoint.X, FLastPoint.Y, Width, Height);
+      end;
+
+      if ShowModal = mrOk then
+      begin
+        Result := -1;
+        for lItemIndex := Low(lRBList) to High(lRBList) do
+        begin
+          if not lRBList[lItemIndex].Checked then
+            Continue;
+          Result := lItemIndex;
+          Break;
+        end;
+      end;
+      FLastPoint := Point(Left, Top);
+    end;
+  finally
+    lForm.Free;
   end;
 end;
 
@@ -216,20 +322,18 @@ end;
 
 { TInputBoxItemHelper }
 
-class function TInputBoxItemHelper.Create: TInputBoxItem;
+procedure TInputBoxItemHelper.Init(AID, APrompt, AValue: string);
 begin
-  with Result do
-  begin
-    ID := TGUID.NewGuid.ToString;
-    Prompt := '';
-    Value := '';
-    MultiLine := False;
-    PasswordChar := #0;
-    CharCase := ecNormal;
-  end;
+  ID := AID;
+  Prompt := APrompt;
+  Value := AValue;
+  MultiLine := False;
+  MaxLength := 0;
+  PasswordChar := #0;
+  CharCase := ecNormal;
 end;
 
 initialization
-  FLastRect := TRect.Empty;
+  FLastPoint := TPoint.Zero;
 
 end.
