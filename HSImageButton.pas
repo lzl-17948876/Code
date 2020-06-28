@@ -2,28 +2,28 @@ unit HSImageButton;
 
 // ***************************************************************************
 //
-// Ö§³ÖPNGµÄGraphicbutton
+// æ”¯æŒPNGçš„Graphicbutton
 //
-// °æ±¾: 1.2
-// ×÷Õß: ÁõÖ¾ÁÖ
-// ĞŞ¸ÄÈÕÆÚ: 2017-12-08
+// ç‰ˆæœ¬: 1.2
+// ä½œè€…: åˆ˜å¿—æ—
+// ä¿®æ”¹æ—¥æœŸ: 2017-12-08
 // QQ: 17948876
 // E-mail: lzl_17948876@hotmail.com
-// ²©¿Í: http://www.cnblogs.com/hs-kill/
+// åšå®¢: https://www.cnblogs.com/lzl_17948876/
 //
-// !!! ÈôÓĞĞŞ¸Ä,ÇëÍ¨Öª×÷Õß,Ğ»Ğ»ºÏ×÷ !!!
+// !!! è‹¥æœ‰ä¿®æ”¹,è¯·é€šçŸ¥ä½œè€…,è°¢è°¢åˆä½œ !!!
 //
 // ---------------------------------------------------------------------------
 //
-// ËµÃ÷:
-// 1.Í¨¹ı°ó¶¨ImageListÀ´ÏÔÊ¾Í¼±ê
-// 2.Í¨¹ıImagelist¶ÔPNGµÄÖ§³ÖÀ´ÏÔÊ¾PNGÍ¼±ê
-// 3.Ö§³Ö4ÖÖ×´Ì¬ÇĞ»» (Normal/Hot/Pressed/Disabled)
-// 4.Ö§³ÖÍ¼Æ¬Î»ÖÃÅÅÁĞ (ImageLayout)
-// 5.Ö§³ÖSpeedButtonµÄGroupÄ£Ê½
-// 6.°æ±¾¼æÈİÖÁD2010
-// 7.Ö§³Ö°´Å¥ÏÂÀ­²Ëµ¥
-// 8.Ö§³ÖÏÂÀ­²Ëµ¥×Ô¶¯¹Ø±Õ
+// è¯´æ˜:
+// 1.é€šè¿‡ç»‘å®šImageListæ¥æ˜¾ç¤ºå›¾æ ‡
+// 2.é€šè¿‡Imagelistå¯¹PNGçš„æ”¯æŒæ¥æ˜¾ç¤ºPNGå›¾æ ‡
+// 3.æ”¯æŒ4ç§çŠ¶æ€åˆ‡æ¢ (Normal/Hot/Pressed/Disabled)
+// 4.æ”¯æŒå›¾ç‰‡ä½ç½®æ’åˆ— (ImageLayout)
+// 5.æ”¯æŒSpeedButtonçš„Groupæ¨¡å¼
+// 6.ç‰ˆæœ¬å…¼å®¹è‡³D2010
+// 7.æ”¯æŒæŒ‰é’®ä¸‹æ‹‰èœå•
+// 8.æ”¯æŒä¸‹æ‹‰èœå•è‡ªåŠ¨å…³é—­
 //
 // ***************************************************************************
 
@@ -101,7 +101,7 @@ type
 
     FOnBeforePopup: TNotifyEvent;
     FMeasureMenuItem: Boolean;
-    FCharHalfHeight: Integer; { ×Ö·û°ë¸ß }
+    FCharHalfHeight: Integer; { å­—ç¬¦åŠé«˜ }
     FPopupAnchor: TPopupAnchor;
     FTrackButton: TTrackButton;
     FShowCaption: Boolean;
@@ -195,23 +195,23 @@ type
     property OnMouseUp;
     property OnBeforePopup: TNotifyEvent read FOnBeforePopup write FOnBeforePopup;
     /// <summary>
-    /// ÊÇ·ñÏŞÖÆ²Ëµ¥¿í¶ÈºÍ°´Å¥±£³ÖÒ»Ö±
+    /// æ˜¯å¦é™åˆ¶èœå•å®½åº¦å’ŒæŒ‰é’®ä¿æŒä¸€ç›´
     /// </summary>
     property MeasureMenuItem: Boolean read FMeasureMenuItem write FMeasureMenuItem default True;
     /// <summary>
-    /// ²Ëµ¥µ¯³ö·½Ïò
+    /// èœå•å¼¹å‡ºæ–¹å‘
     /// </summary>
     property PopupAnchor: TPopupAnchor read FPopupAnchor write FPopupAnchor default paBottomLeft;
     /// <summary>
-    /// ²Ëµ¥¼¤»î°´¼ü
+    /// èœå•æ¿€æ´»æŒ‰é”®
     /// </summary>
     property PopupTrackButton: TTrackButton read FTrackButton write FTrackButton default tbLeftButton;
     /// <summary>
-    /// ÊÇ·ñÏÔÊ¾Caption
+    /// æ˜¯å¦æ˜¾ç¤ºCaption
     /// </summary>
     property ShowCaption: Boolean read FShowCaption write SetShowCaption default True;
     /// <summary>
-    /// ÊÇ·ñ×Ô¶¯¹Ø±Õ²Ëµ¥
+    /// æ˜¯å¦è‡ªåŠ¨å…³é—­èœå•
     /// </summary>
     property PopupAutoClose: Boolean read FPopupAutoClose write FPopupAutoClose default False;
   end;
@@ -219,9 +219,9 @@ type
 implementation
 
 var
-  FBMP_OBM_CHECK: TBitmap; { ÏµÍ³¶Ô¹´×ÊÔ´ }
-  FBOCHalfHeight: Integer; { ÏµÍ³¶Ô¹´×ÊÔ´ °ë¸ß }
-  FBOCHalfWidth: Integer; { ÏµÍ³¶Ô¹´×ÊÔ´ °ë¿í }
+  FBMP_OBM_CHECK: TBitmap; { ç³»ç»Ÿå¯¹å‹¾èµ„æº }
+  FBOCHalfHeight: Integer; { ç³»ç»Ÿå¯¹å‹¾èµ„æº åŠé«˜ }
+  FBOCHalfWidth: Integer; { ç³»ç»Ÿå¯¹å‹¾èµ„æº åŠå®½ }
 
   { THSImageButton }
 
@@ -302,7 +302,7 @@ begin
   begin
     SetLength(nDefParam.MeasureItemEvens, PopupMenu.Items.Count);
     nDefParam.OwnerDraw := PopupMenu.OwnerDraw;
-    PopupMenu.OwnerDraw := True; { Ö»ÓĞOwnerDrawÄ£Ê½ÏÂ²ÅÄÜ×Ô¶¨ÒåÏÔÊ¾³ß´ç }
+    PopupMenu.OwnerDraw := True; { åªæœ‰OwnerDrawæ¨¡å¼ä¸‹æ‰èƒ½è‡ªå®šä¹‰æ˜¾ç¤ºå°ºå¯¸ }
   end;
 
   PopupMenu.PopupComponent := Self;
@@ -393,13 +393,13 @@ begin
       nPT := Self.ClientToScreen(Point(0, Height));
     end;
 
-    { Õâ3¾äÊÇÎªÁËÈÃPopupMenu.ItemsÖ´ĞĞRebuildHandle
-      ÒòÎªÊ¹ÓÃTrackPopupMenuµ¯³ö²Ëµ¥, ËùÒÔÃ»ÓĞItemsÖ´ĞĞRebuildHandle¿ÉÄÜ»áµ¼ÖÂOwnerDraw²»Ö´ĞĞ }
+    { è¿™3å¥æ˜¯ä¸ºäº†è®©PopupMenu.Itemsæ‰§è¡ŒRebuildHandle
+      å› ä¸ºä½¿ç”¨TrackPopupMenuå¼¹å‡ºèœå•, æ‰€ä»¥æ²¡æœ‰Itemsæ‰§è¡ŒRebuildHandleå¯èƒ½ä¼šå¯¼è‡´OwnerDrawä¸æ‰§è¡Œ }
     nMI := NewLine;
     PopupMenu.Items.Add(nMI);
     nMI.Free;
 
-    { Èç¹û×Ô¶¯¹Ø±Õ, ¿ª¸öÏß³Ì¼àÊÓÊó±ê×ø±ê }
+    { å¦‚æœè‡ªåŠ¨å…³é—­, å¼€ä¸ªçº¿ç¨‹ç›‘è§†é¼ æ ‡åæ ‡ }
     nAT := nil;
     if FPopupAutoClose then
     begin
@@ -522,7 +522,7 @@ begin
   Canvas.Font := Self.Font;
   Canvas.Brush.Style := bsClear;
 
-  { »­±³¾° }
+  { ç”»èƒŒæ™¯ }
   if ThemeControl(Self) then
   begin
     nLGlassPaint := DoGlassPaint;
@@ -643,7 +643,7 @@ begin
   nPaintRect := ClientRect;
   nCenterPoint := nPaintRect.CenterPoint;
 
-  { ¼ÆËãÎÄ×ÖÏÔÊ¾¿í¸ß }
+  { è®¡ç®—æ–‡å­—æ˜¾ç¤ºå®½é«˜ }
   if FShowCaption and (Length(Caption) > 0) then
   begin
     nTextRect := nPaintRect;
@@ -658,11 +658,11 @@ begin
     end
     else
     begin
-      { ¼ÆËãÏÔÊ¾Î»ÖÃ }
+      { è®¡ç®—æ˜¾ç¤ºä½ç½® }
       Winapi.Windows.DrawText(Canvas.Handle, Caption, Length(Text), nTextRect, nTextFlg);
     end;
     nTextSize := nTextRect.Size;
-    { »»Ëãµ½ÖĞ¼äÎ»ÖÃ }
+    { æ¢ç®—åˆ°ä¸­é—´ä½ç½® }
     nTextRect.Offset(nCenterPoint.X - nTextSize.cx div 2, nCenterPoint.Y - nTextSize.cy div 2);
   end
   else
@@ -670,7 +670,7 @@ begin
     nTextSize.Create(0, 0);
   end;
 
-  { ¸ù¾İ¼ÆËãÍ¼Ïñ/ÎÄ×ÖÎ»ÖÃ, ²¢»­Í¼ }
+  { æ ¹æ®è®¡ç®—å›¾åƒ/æ–‡å­—ä½ç½®, å¹¶ç”»å›¾ }
   if (Images <> nil) and (FImageIndex > -1) then
   begin
 {$IF RTLVersion >= 27}
@@ -738,7 +738,7 @@ begin
 {$ENDIF}
   end;
 
-  { »­ÎÄ×Ö }
+  { ç”»æ–‡å­— }
   if not nTextSize.IsZero then
   begin
     nTextFlg := DT_VCENTER or DT_SINGLELINE or DT_CENTER;
@@ -752,7 +752,7 @@ begin
       end
       else
         nLColor := Canvas.Font.Color;
-      { ÏÔÊ¾ }
+      { æ˜¾ç¤º }
       nLFormats := TTextFormatFlags(nTextFlg);
       if nLGlassPaint then
         Include(nLFormats, tfComposited);
@@ -764,7 +764,7 @@ begin
         Canvas.Font.Color := clGrayText
       else
         Canvas.Font.Color := clWindowText;
-      { ÏÔÊ¾ }
+      { æ˜¾ç¤º }
       Winapi.Windows.DrawText(Canvas.Handle, Caption, Length(Text), nTextRect, nTextFlg);
     end;
   end;
@@ -1145,7 +1145,7 @@ procedure THSImageButton.SetParent(AParent: TWinControl);
 begin
   inherited;
   if Parent <> nil then
-    FCharHalfHeight := Canvas.TextHeight('²â') div 2;
+    FCharHalfHeight := Canvas.TextHeight('æµ‹') div 2;
 end;
 
 procedure THSImageButton.SetPressedImageIndex(const Value: TImageIndex);
