@@ -194,25 +194,15 @@ type
     property OnMouseMove;
     property OnMouseUp;
     property OnBeforePopup: TNotifyEvent read FOnBeforePopup write FOnBeforePopup;
-    /// <summary>
-    /// 是否限制菜单宽度和按钮保持一直
-    /// </summary>
+    /// <summary> 是否限制菜单宽度和按钮保持一直 </summary>
     property MeasureMenuItem: Boolean read FMeasureMenuItem write FMeasureMenuItem default True;
-    /// <summary>
-    /// 菜单弹出方向
-    /// </summary>
+    /// <summary> 菜单弹出方向 </summary>
     property PopupAnchor: TPopupAnchor read FPopupAnchor write FPopupAnchor default paBottomLeft;
-    /// <summary>
-    /// 菜单激活按键
-    /// </summary>
+    /// <summary> 菜单激活按键 </summary>
     property PopupTrackButton: TTrackButton read FTrackButton write FTrackButton default tbLeftButton;
-    /// <summary>
-    /// 是否显示Caption
-    /// </summary>
+    /// <summary> 是否显示Caption </summary>
     property ShowCaption: Boolean read FShowCaption write SetShowCaption default True;
-    /// <summary>
-    /// 是否自动关闭菜单
-    /// </summary>
+    /// <summary> 是否自动关闭菜单 </summary>
     property PopupAutoClose: Boolean read FPopupAutoClose write FPopupAutoClose default False;
   end;
 
