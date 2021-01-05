@@ -107,7 +107,10 @@ begin
           end;
         end;
       Canvas.Font := Font;
-      BorderStyle := bsSizeToolWin;
+      if TOSVersion.Major < 10 then
+        BorderStyle := bsSizeToolWin
+      else
+        BorderIcons := [biSystemMenu];
       Caption := ACaption;
       ClientWidth := 256;
       PopupMode := pmAuto;
